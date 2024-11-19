@@ -51,6 +51,7 @@ def phonetic_similarity(new_title, existing_title):
 def verify_title(new_title, top_k=10):
     new_title_clean = clean_text(new_title)
     detailed_report = []  # Store comprehensive details about matches
+    DISALLOWED_WORDS = {'thief', 'police', 'cid', 'crime', 'corruption', 'army'}
 
     # Check for title length
     if len(new_title_clean) < 3:
@@ -70,6 +71,18 @@ def verify_title(new_title, top_k=10):
             'detailed_report': detailed_report
         }
     # TF-IDF vectorization and search
+    words_in_title = set(new_title_clean.lower().split())
+    disallowed_found = DISALLOWED_WORDS.intersection(words_in_title)
+    if disallowed_found:
+        return {
+            'verified': False,
+            'probability': 1,
+            'reason': f"The title contains disallowed words: {', '.join(disallowed_found)}.",
+            'suggestion': "Please avoid using words that relate to crime or restricted domains.",
+            'detailed_report': detailed_report
+        }
+
+    
     new_vector = vectorizer.transform([new_title_clean]).toarray().astype('float32')
     distances, indices = index.search(new_vector, top_k)
 
